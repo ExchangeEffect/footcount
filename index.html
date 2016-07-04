@@ -1,0 +1,134 @@
+<!doctype html>
+<html class="no-js">
+  	<head>
+		<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.5/angular.min.js"></script>
+		<script src="https://cdn.pubnub.com/pubnub.min.js"></script>
+		<script src="http://pubnub.github.io/angular-js/scripts/pubnub-angular.js"></script>
+		<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css" />
+		<script type="text/javascript" src="http://pubnub.github.io/eon/lib/eon-map.js"></script>
+		<script type="text/javascript" src="Route2geojson.js"></script>
+		<script type="text/javascript" src="Route6.js"></script>
+		<link type="text/css" rel="stylesheet" href="http://pubnub.github.io/eon/lib/eon.css" />
+		
+		<style>
+	      html, body, #map {
+	        height: 100vh;
+	        margin: 0px;
+	        padding: 0px
+	      }
+	    </style>
+    
+	</head>
+	<body>
+		<div id="map">
+	
+		</div>
+		<script type="text/javascript">
+			function generateUUID() {
+			    var d = new Date().getTime();
+			    var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+			        var r = (d + Math.random()*16)%16 | 0;
+			        d = Math.floor(d/16);
+			        return (c=='x' ? r : (r&0x3|0x8)).toString(16);
+			    });
+			    return uuid;
+			};
+
+			var uuid = generateUUID();
+			console.log(uuid);
+			
+			L.RotatedMarker = L.Marker.extend({
+			    options: { angle: 0 },
+			    _setPos: function(pos) {
+			      L.Marker.prototype._setPos.call(this, pos);
+			      if (L.DomUtil.TRANSFORM) {
+			        // use the CSS transform rule if available
+			        this._icon.style[L.DomUtil.TRANSFORM] += ' rotate(' + this.options.angle + 'deg)';
+			      } else if (L.Browser.ie) {
+			        // fallback for IE6, IE7, IE8
+			        var rad = this.options.angle * L.LatLng.DEG_TO_RAD,
+			        costheta = Math.cos(rad),
+			        sintheta = Math.sin(rad);
+			        this._icon.style.filter += ' progid:DXImageTransform.Microsoft.Matrix(sizingMethod=\'auto expand\', M11=' +
+			          costheta + ', M12=' + (-sintheta) + ', M21=' + sintheta + ', M22=' + costheta + ')';
+			      }
+			    }
+			  });
+  
+  			var map_line, map, marker;
+  			var direction = 0, manual = false;
+  			
+			map = eon.map({
+			  id: 'map',
+			  mb_token: 'pk.eyJ1IjoicmFqdWphZ2FkIiwiYSI6IjE0NWZmMWQ0ZDlkODc4NTdiMmIwMDkyODE0YmNhMGVlIn0.gSp6oGCE06CSqouKo_WmFQ',
+			  mb_id: 'mapbox.streets',
+			  subscribe_key: 'sub-c-88ce8af8-31bb-11e6-be83-0619f8945a4f',
+			  channel: uuid,
+			  rotate: true,
+			  //history: true,
+			  message: function (data) {
+			  	// comment this code if you don't want to auto center or zoom
+			  	map_line.addLatLng(data[0].latlng);
+			  	if (marker) {
+			  	  marker.setLatLng(data[0].latlng);
+			  	}
+			  	
+			  	map.setView([ data[0].latlng.lat, data[0].latlng.lng ]);
+			  },
+			  marker: function (latlng, data) {
+			    marker = new L.RotatedMarker(latlng, {
+			      icon: L.icon({
+			        iconUrl: 'https://i.imgur.com/fjFmMgA.png',
+			        iconSize: [9, 32]
+			      })
+			    });
+			
+			    marker.bindPopup('Route 2');
+			
+			    return marker;
+			  }
+			});
+			
+			// initialise view
+			map_line = L.polyline([], {color: 'red'}).addTo(map);
+			
+			var pubnub = PUBNUB.init({
+			  subscribe_key: 'sub-c-88ce8af8-31bb-11e6-be83-0619f8945a4f',
+			  publish_key: 'pub-c-79da028c-d421-4a7e-9765-1085faa7b8dc',
+			  uuid: '12345'
+			});
+			
+			var i = 0;
+			
+			map.setView(L.latLng(Route2[i][1], Route2[i][0]), 15);
+			map.setView(L.latLng(Route6[i][1], Route6[i][0]), 15);
+			i++;
+			
+			setInterval(function() {
+				
+				// if (marker) {
+				// var ll = marker.getLatLng();
+				  // ll.lat += Math.cos(direction) / 100;
+				  // ll.lng += Math.sin(direction) / 100;
+				  // marker.options.angle = direction * (180 / Math.PI);
+				  // marker.setLatLng(ll);
+				  // if (!manual && Math.random() > 0.95) {
+				    // direction += (Math.random() - 0.5) / 2;
+				  // }
+				 // }
+  
+  
+			  PUBNUB.publish({
+			    channel: uuid,
+			    message:
+			      [
+			        { latlng: L.latLng(Route2[i][1], Route2[i][0]) }
+			      ]
+			  });
+			  
+			  i++;
+			}, 1000);
+			
+		</script>
+	</body>
+</html>

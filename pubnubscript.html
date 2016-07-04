@@ -1,0 +1,12 @@
+<div id="map"></div>
+<script>
+  var pubnub  = PUBNUB({ subscribe_key : 'sub-c-88ce8af8-31bb-11e6-be83-0619f8945a4f', ssl : true });
+  var channel = 'Great-Route2-bus';
+  eon.map({
+    pubnub   : pubnub,  // < - - - here < - - - //
+    channel  : channel,
+    id       : 'map',
+    mb_id    : 'mapbox.streets',
+    mb_token : 'pk.eyJ1IjoicmFqdWphZ2FkIiwiYSI6IjE0NWZmMWQ0ZDlkODc4NTdiMmIwMDkyODE0YmNhMGVlIn0.gSp6oGCE06CSqouKo_WmFQ'
+  });
+</script>
